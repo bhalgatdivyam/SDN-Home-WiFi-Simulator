@@ -69,7 +69,7 @@ svg{width:100%;height:auto;display:block}
 <g id="badges"></g>
 <rect id="ring" class="hid" data-s="2" data-e="4" x="337" y="152" width="126" height="46" rx="12" fill="none" stroke="var(--good)" stroke-width="3"/><text x="70" y="302" text-anchor="middle" font-size="26">🎮</text><text id="react" x="730" y="302" text-anchor="middle" font-size="26"></text><g id="dots"></g>
 </svg>
-<div class="legend"><span><i style="background:var(--video)"></i>Game data</span><span><i style="background:var(--bk)"></i>Downloads</span><span><i style="background:var(--amber)"></i>Status reports</span></div>
+<div class="legend"><span><i style="background:var(--video)"></i>Game data</span><span><i style="background:var(--amber)"></i>Status reports</span></div>
 </div>
 <div class="panel" aria-live="polite">
 <span class="plane" id="plane"></span>
@@ -120,14 +120,13 @@ const a=pts[i],b=pts[i+1],q=seg[i]?d/seg[i]:1;c.setAttribute('cx',a[0]+(b[0]-a[0
 if(onseg&&i!==last){last=i;onseg(i)}
 if(p<1)requestAnimationFrame(f);else{c.remove();cb&&cb()}})(t0)}
 function flash(k){const r=$('n-'+k).querySelector('rect');r.style.fill='var(--teal)';setTimeout(()=>r.style.fill='',700)}
-function backup(id){if(id!==tok)return;dot(['h','s1','s3','s4','d'],'#475569',3600,null,null,5);setTimeout(()=>backup(id),700)}
 function play(i){const id=tok;
 if(i===0)dot(['app','ctl'],'#059669',1400);
 if(i===1){const r=$('n-ctl').querySelector('rect');let n=0;const iv=setInterval(()=>{if(id!==tok||n>5){clearInterval(iv);r.style.fill='';return}r.style.fill=n%2?'':'var(--good)';n++},300)}
 if(i===2)['s1','s2','s3','s4'].forEach((s,j)=>setTimeout(()=>id===tok&&dot([s,'ctl'],'#d97706',1300),j*250));
 if(i===3)dot(['ctl','s1','s2','s4'],'#059669',2200);
 if(i===4)['s1','s2','s4'].forEach((s,j)=>setTimeout(()=>id===tok&&dot(['ctl',s],'#4338ca',1200,()=>{flash(s);var b=$('badge-'+s);if(b)b.classList.add('on')}),j*300));
-if(i===5){backup(id);const path=['h','s1','s2','s4','d'];const go=()=>{if(id!==tok)return;dot(path,'#059669',2600,null,k=>{if(k>0&&k<4)flash(path[k])});t6=setTimeout(go,550)};go()}}
+if(i===5){const path=['h','s1','s2','s4','d'];const go=()=>{if(id!==tok)return;dot(path,'#059669',2600,null,k=>{if(k>0&&k<4)flash(path[k])});t6=setTimeout(go,550)};go()}}
 function show(i){tok++;clearTimeout(t6);$('dots').innerHTML='';cur=i;
 document.querySelectorAll('.hid').forEach(e=>{var s=+e.dataset.s,end=e.dataset.e?+e.dataset.e:99;e.classList.toggle('on',s<=i+1&&i+1<=end)});
 document.querySelectorAll('#steps button').forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('done',j<i)});
