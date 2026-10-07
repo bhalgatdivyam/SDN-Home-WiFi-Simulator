@@ -33,7 +33,7 @@ An interactive, single-page HTML simulation that demonstrates how **Software-Def
 Just open the HTML file in any modern browser:
 
 ```
-open "SDN in Action_ Online Gaming on Home Wi-Fi.html"
+open "index.html"
 ```
 
 Or double-click the file in your file explorer.
