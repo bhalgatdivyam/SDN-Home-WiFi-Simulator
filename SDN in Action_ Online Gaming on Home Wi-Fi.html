@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SDN in Action: Online Gaming on Home Wi-Fi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{color-scheme:light;--bg:#f8fafc;--card:#fff;--ink:#1e293b;--mute:#64748b;--line:#cbd5e1;--navy:#4338ca;--teal:#059669;--video:#059669;--bk:#475569;--hot:#e11d48;--good:#059669;--amber:#d97706;--ba:#eef2ff;--bc:#e0f2fe;--bd:#ecfdf5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 14px 32px}
+h1{font-size:clamp(22px,4.5vw,32px);line-height:1.2;margin:0 0 10px;font-weight:700;letter-spacing:-.01em}
+.scn{background:var(--navy);color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:14px}
+.scn b{font-weight:600}.scn p{margin:0;max-width:80ch;color:#dbe5f7}
+.steps{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.steps button{flex:1 1 84px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 6px;font:600 14px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer}
+.steps button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.steps button.done{border-color:var(--teal);color:var(--teal)}
+.steps button.on.done{color:#fff}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px}
+svg{width:100%;height:auto;display:block}
+.ba{fill:var(--ba)}.bc{fill:var(--bc)}.bd{fill:var(--bd)}
+.bl{font:600 13px "IBM Plex Sans",system-ui,sans-serif;fill:var(--mute)}
+.t{font:600 13px "IBM Plex Sans",system-ui,sans-serif;text-anchor:middle}
+.sm{font:600 13px "IBM Plex Sans",system-ui,sans-serif;text-anchor:middle}
+.link{stroke:var(--line);stroke-width:4;stroke-linecap:round}
+.hid{opacity:0;transition:opacity .4s}.hid.on{opacity:1}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:8px 12px 4px;font-size:13px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.panel{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;border-left:5px solid var(--teal)}
+.plane{font-weight:600;font-size:13px;color:var(--teal)}
+.panel h2{margin:0 0 6px;font-size:20px;font-weight:700}
+.panel p{margin:6px 0;max-width:72ch}
+
+.ctrls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctrls button{border:1px solid var(--navy);background:var(--card);color:var(--navy);border-radius:8px;padding:10px 16px;font:600 15px "IBM Plex Sans",system-ui,sans-serif;cursor:pointer}
+.ctrls .p{background:var(--navy);color:#fff}
+.ctrls button:disabled{opacity:.4;cursor:default}
+.q{display:flex;align-items:center;gap:10px;margin-top:12px}.q span{font-size:14px;color:var(--mute);font-weight:600;white-space:nowrap}.bar{flex:1;height:14px;background:var(--line);border-radius:7px;overflow:hidden}.bar i{display:block;height:100%;width:20%;transition:width .8s,background .8s}
+#ring{transform-box:fill-box;transform-origin:center}#ring.on{animation:ping 1.4s infinite}
+@keyframes ping{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+#best.on line{stroke-dasharray:220;animation:draw 1.2s ease-out}
+@keyframes draw{from{stroke-dashoffset:220}to{stroke-dashoffset:0}}
+.panel h2{font-size:22px}.panel p{font-size:18px}
+@media (prefers-reduced-motion:reduce){.hid{transition:none}#ring.on,#best.on line{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>SDN in action: online gaming on home Wi-Fi</h1>
+<div class="scn"><p><b>Scenario.</b> Rohan is playing an online match. His brother starts downloading a huge game update on the same Wi-Fi. Rohan's game lags and he loses. Let's see how SDN fixes it.</p></div>
+<div class="steps" id="steps"></div>
+<div class="stage">
+<svg viewBox="0 0 800 450" role="img" aria-label="SDN network simulation" id="svg">
+<rect class="ba" x="8" y="8" width="784" height="92" rx="10"/><text class="bl" x="18" y="26">Application Plane</text>
+<rect class="bc" x="8" y="112" width="784" height="124" rx="10"/><text class="bl" x="18" y="130">Control Plane</text>
+<rect class="bd" x="8" y="246" width="784" height="196" rx="10"/><text class="bl" x="18" y="264">Data Plane</text>
+<g id="links"></g>
+<g id="best" class="hid" data-s="4"></g>
+<g id="south" class="hid" data-s="5"></g>
+<g id="loads" class="hid" data-s="1"></g>
+<g id="nodes"></g>
+<g class="hid" data-s="1"><rect x="470" y="38" width="190" height="30" rx="15" fill="var(--teal)"/><text class="sm" x="565" y="57" fill="#fff">Request: game data first</text></g>
+<g class="hid" data-s="2"><rect x="470" y="160" width="190" height="30" rx="15" fill="var(--good)"/><text class="sm" x="565" y="179" fill="#fff">Rule: games come first ✓</text></g>
+<g class="hid" data-s="4"><rect x="272" y="276" width="76" height="22" rx="11" fill="var(--teal)"/><text class="sm" x="310" y="291" fill="#fff">Best path</text></g>
+<g id="badges"></g>
+<rect id="ring" class="hid" data-s="2" data-e="4" x="337" y="152" width="126" height="46" rx="12" fill="none" stroke="var(--good)" stroke-width="3"/><text x="70" y="302" text-anchor="middle" font-size="26">🎮</text><text id="react" x="730" y="302" text-anchor="middle" font-size="26"></text><g id="dots"></g>
+</svg>
+<div class="legend"><span><i style="background:var(--video)"></i>Game data</span><span><i style="background:var(--bk)"></i>Downloads</span><span><i style="background:var(--amber)"></i>Status reports</span></div>
+</div>
+<div class="panel" aria-live="polite">
+<span class="plane" id="plane"></span>
+<h2 id="ttl"></h2>
+<p id="story"></p>
+<div class="q"><span>Game speed</span><div class="bar"><i id="qf"></i></div></div>
+</div>
+<div class="ctrls">
+<button id="prev">Previous</button>
+<button id="next" class="p">Next step</button>
+<button id="auto">Auto-play</button>
+<button id="reset">Restart</button>
+</div>
+</main>
+<script>
+const N={app:[400,55],ctl:[400,175],h:[70,340],s1:[220,340],s2:[400,290],s3:[400,400],s4:[580,340],d:[730,340]};
+const L=[['h','s1'],['s1','s2'],['s1','s3'],['s2','s4'],['s3','s4'],['s4','d']];
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+const mid=(a,b)=>[(N[a][0]+N[b][0])/2,(N[a][1]+N[b][1])/2];
+const ln=(a,b,cls,extra='')=>`<line class="${cls}" x1="${N[a][0]}" y1="${N[a][1]}" x2="${N[b][0]}" y2="${N[b][1]}" ${extra}/>`;
+$('links').innerHTML=ln('app','ctl','link','stroke-dasharray="2 8"')+L.map(l=>ln(l[0],l[1],'link')).join('');
+$('best').innerHTML=[['s1','s2'],['s2','s4']].map(l=>ln(l[0],l[1],'',`stroke="var(--teal)" stroke-width="7" stroke-linecap="round"`)).join('');
+$('south').innerHTML=['s1','s2','s4'].map(s=>ln('ctl',s,'',`stroke="var(--navy)" stroke-width="2" stroke-dasharray="6 5"`)).join('')+`<text class="sm" x="268" y="236" style="fill:var(--mute)">OpenFlow</text>`;
+const loads=[['s1','s2','20%',-30,-6,'--good'],['s1','s3','85%',-30,16,'--hot'],['s2','s4','25%',30,-6,'--good'],['s3','s4','80%',30,16,'--hot']];
+$('loads').innerHTML=loads.map(([a,b,v,dx,dy,c])=>{const m=mid(a,b);return `<text class="sm" x="${m[0]+dx}" y="${m[1]+dy}" style="fill:var(${c})">${v} busy</text>`}).join('');
+const nd={app:'Game App',ctl:'SDN Controller',h:'Gamer',s1:'S1',s2:'S2',s3:'S3',s4:'S4',d:'Game Server'};
+$('nodes').innerHTML=Object.entries(nd).map(([k,v])=>{const[x,y]=N[k];const sw=/^s\d$/.test(k);const w=sw?48:(k==='ctl'||k==='app'?116:92);const f=(k==='ctl'||sw)?'var(--navy)':'var(--card)';const tc=(k==='ctl'||sw)?'#fff':'var(--ink)';
+return `<g id="n-${k}"><rect x="${x-w/2}" y="${y-18}" width="${w}" height="36" rx="8" fill="${f}" stroke="var(--navy)" stroke-width="2"/><text class="t" x="${x}" y="${y+5}" style="fill:${tc}">${v}</text></g>`}).join('');
+$('badges').innerHTML=[['s1',220,306],['s2',400,252],['s4',580,306]].map(([k,x,y])=>`<g id="badge-${k}" class="hid" data-s="6"><rect x="${x-77}" y="${y}" width="154" height="22" rx="6" fill="var(--card)" stroke="var(--good)"/><text class="sm" x="${x}" y="${y+15}" style="fill:var(--good)">game → priority ✓</text></g>`).join('');
+
+const S=[
+{p:'Application Plane',t:'1. Game app sends request',s:'"Give my game data priority!"'},
+{p:'Control Plane',t:'2. Controller checks rules',s:'Rule found: games come first. Approved ✓'},
+{p:'Control Plane',t:'3. Controller checks traffic',s:'Lower route is jammed by downloads. Upper route is free.'},
+{p:'Control Plane',t:'4. Controller picks best path',s:'Game data will take the free upper route.'},
+{p:'Controller → Switches (OpenFlow)',t:'5. Rules sent to switches',s:'Every switch learns: game data goes first.'},
+{p:'Data Plane',t:'6. Switches forward packets',s:'Game runs at full speed! Downloads still finish.'}
+];
+const Q=[20,20,15,15,30,100];
+let cur=0,tok=0,timer=null,t6;
+$('steps').innerHTML=S.map((s,i)=>`<button data-i="${i}">Step ${i+1}</button>`).join('');
+function dot(path,color,ms,cb,onseg,r=7){const id=tok;const c=document.createElementNS(NS,'circle');c.setAttribute('r',r);c.setAttribute('fill',color);c.setAttribute('stroke','#fff');c.setAttribute('stroke-width',2);$('dots').appendChild(c);
+const pts=path.map(k=>N[k]);const seg=[];let tot=0;for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);tot+=d}
+const t0=performance.now();let last=-1;
+(function f(now){if(id!==tok){c.remove();return}const p=Math.min(1,(now-t0)/ms);let d=p*tot,i=0;while(i<seg.length-1&&d>seg[i]){d-=seg[i];i++}
+const a=pts[i],b=pts[i+1],q=seg[i]?d/seg[i]:1;c.setAttribute('cx',a[0]+(b[0]-a[0])*q);c.setAttribute('cy',a[1]+(b[1]-a[1])*q);
+if(onseg&&i!==last){last=i;onseg(i)}
+if(p<1)requestAnimationFrame(f);else{c.remove();cb&&cb()}})(t0)}
+function flash(k){const r=$('n-'+k).querySelector('rect');r.style.fill='var(--teal)';setTimeout(()=>r.style.fill='',700)}
+function backup(id){if(id!==tok)return;dot(['h','s1','s3','s4','d'],'#475569',3600,null,null,5);setTimeout(()=>backup(id),700)}
+function play(i){const id=tok;
+backup(id);
+if(i===0)dot(['app','ctl'],'#059669',1400);
+if(i===1){const r=$('n-ctl').querySelector('rect');let n=0;const iv=setInterval(()=>{if(id!==tok||n>5){clearInterval(iv);r.style.fill='';return}r.style.fill=n%2?'':'var(--good)';n++},300)}
+if(i===2)['s1','s2','s3','s4'].forEach((s,j)=>setTimeout(()=>id===tok&&dot([s,'ctl'],'#d97706',1300),j*250));
+if(i===3)dot(['ctl','s1','s2','s4'],'#059669',2200);
+if(i===4)['s1','s2','s4'].forEach((s,j)=>setTimeout(()=>id===tok&&dot(['ctl',s],'#4338ca',1200,()=>{flash(s);var b=$('badge-'+s);if(b)b.classList.add('on')}),j*300));
+if(i===5){const path=['h','s1','s2','s4','d'];const go=()=>{if(id!==tok)return;dot(path,'#059669',2600,null,k=>{if(k>0&&k<4)flash(path[k])});t6=setTimeout(go,550)};go()}}
+function show(i){tok++;clearTimeout(t6);$('dots').innerHTML='';cur=i;
+document.querySelectorAll('.hid').forEach(e=>{var s=+e.dataset.s,end=e.dataset.e?+e.dataset.e:99;e.classList.toggle('on',s<=i+1&&i+1<=end)});
+document.querySelectorAll('#steps button').forEach((b,j)=>{b.classList.toggle('on',j===i);b.classList.toggle('done',j<i)});
+const s=S[i];$('plane').textContent=s.p;$('ttl').textContent=s.t;$('story').textContent=s.s;
+$('qf').style.width=Q[i]+'%';$('qf').style.background=i===5?'var(--good)':'var(--hot)';$('react').textContent=i===5?'⚡':'🐌';
+$('prev').disabled=i===0;$('next').disabled=i===5;play(i)}
+function stopAuto(){clearInterval(timer);timer=null;$('auto').textContent='Auto-play'}
+$('next').onclick=()=>{stopAuto();show(Math.min(5,cur+1))};
+$('prev').onclick=()=>{stopAuto();show(Math.max(0,cur-1))};
+$('reset').onclick=()=>{stopAuto();show(0)};
+$('steps').onclick=e=>{const b=e.target.closest('button');if(b){stopAuto();show(+b.dataset.i)}};
+$('auto').onclick=()=>{if(timer){stopAuto();return}$('auto').textContent='Pause';if(cur===5)show(0);timer=setInterval(()=>{if(cur>=5){stopAuto();return}show(cur+1)},5000)};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click()});
+show(0);
+</script>
+</body>
+</html>
